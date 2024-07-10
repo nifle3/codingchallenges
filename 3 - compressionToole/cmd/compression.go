@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nifle3/compressinTool/pkg/output"
+
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +19,10 @@ var compressionCmd = &cobra.Command{
 	Short: "To comprese some file",
 	Long:  `Use for compression some file. This is a third quest from coding challenges`,
 	Run: func(cmd *cobra.Command, args []string) {
+		out := output.CreateOutput()
+
 		if len(args) < 1 {
-			fmt.Println(string(colorRed) + "Please enter a file path" + string(colorReset))
+			out.Error("You must enter a file path")
 			os.Exit(0)
 		}
 
@@ -26,7 +30,7 @@ var compressionCmd = &cobra.Command{
 
 		_, err := os.Stat(fileName)
 		if os.IsNotExist(err) {
-			fmt.Println(colorRed + "Your file is not exist" + colorReset)
+			out.Error("Your file is not exist")
 			os.Exit(0)
 		}
 
@@ -34,17 +38,18 @@ var compressionCmd = &cobra.Command{
 
 		file, err := os.OpenFile(fileName, os.O_RDONLY, 0666)
 		if err != nil {
-			fmt.Println(colorRed, err.Error(), colorReset)
+			out.Error(err.Error())
 			os.Exit(0)
 		}
 		defer func() {
 			if err := file.Close(); err != nil {
-				fmt.Println(colorRed, err.Error(), colorReset)
+				out.Error(err.Error())
 				os.Exit(0)
 			}
 		}()
 
 		scanner := bufio.NewScanner(file)
+		scanner.Buffer(make([]byte, 1024*1024), bufio.MaxScanTokenSize)
 		numberOfChar := make(map[byte]int)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -57,19 +62,10 @@ var compressionCmd = &cobra.Command{
 		for key, value := range numberOfChar {
 			fmt.Printf("%s : %d\n", string(key), value)
 		}
+
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(compressionCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// compressionCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// compressionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

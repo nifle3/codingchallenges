@@ -9,11 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	colorRed   = "\033[31m"
-	colorReset = "\033[0m"
-)
-
 var rootCmd = &cobra.Command{
 	Use:   "compressinTool",
 	Short: "The tool for compression and uncompression some files",
