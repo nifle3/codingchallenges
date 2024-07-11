@@ -1,34 +1,53 @@
-package datastruct
+package dataStruct
 
 import (
 	"errors"
-
-	"golang.org/x/exp/constraints"
+	"fmt"
+	"strconv"
 )
 
-type NodeValue[K any, V constraints.Ordered] struct {
-	key   K
-	value V
+type Node struct {
+	Freq  int
+	Elem  rune
+	Left  *Node
+	Right *Node
 }
 
-type PrioretyQueue[K any, V constraints.Ordered] struct {
-	heap   []NodeValue[K, V] // 0 - base node, 2i - right, 2i +1 - left, parent -  i / 2
+func (n *Node) PrintTree() {
+	var defaultValue rune
+	if n.Elem != defaultValue {
+		fmt.Printf("%s ", strconv.QuoteRune(n.Elem))
+		return
+	}
+
+	fmt.Printf("%d ", n.Freq)
+
+	if n.Left != nil {
+		n.Left.PrintTree()
+	}
+
+	if n.Right != nil {
+		n.Right.PrintTree()
+	}
+}
+
+type PrioretyQueue struct {
+	heap   []Node // 0 - base node, 2i - right, 2i +1 - left, parent -  i / 2
 	length int
 }
 
-func New[K any, V constraints.Ordered](startCap int) PrioretyQueue[K, V] {
-	return PrioretyQueue[K, V]{
-		heap: make([]NodeValue[K, V], 0, startCap),
+func New(startCap int) PrioretyQueue {
+	if startCap < 0 {
+		startCap = 0
+	}
+
+	return PrioretyQueue{
+		heap: make([]Node, 0, startCap),
 	}
 }
 
-func (p *PrioretyQueue[K, V]) Insert(key K, value V) {
-	insertedValue := NodeValue[K, V]{
-		key:   key,
-		value: value,
-	}
-
-	p.heap = append(p.heap, insertedValue)
+func (p *PrioretyQueue) Insert(node Node) {
+	p.heap = append(p.heap, node)
 	p.length++
 
 	if len(p.heap) != p.length {
@@ -40,9 +59,9 @@ func (p *PrioretyQueue[K, V]) Insert(key K, value V) {
 			p.heap[len(p.heap)-1], p.heap[p.length]
 	}
 
-	for i := p.length - 1; i < 2; {
+	for i := p.length - 1; i > 2; {
 		parentIndex := int(i) / int(2)
-		if p.heap[i].value > p.heap[parentIndex].value {
+		if p.heap[i].Freq > p.heap[parentIndex].Freq {
 			break
 		}
 
@@ -51,10 +70,9 @@ func (p *PrioretyQueue[K, V]) Insert(key K, value V) {
 	}
 }
 
-func (p *PrioretyQueue[K, V]) ExtractMinimum() (NodeValue[K, V], error) {
+func (p *PrioretyQueue) ExtractMinimum() (Node, error) {
 	if p.length <= 0 {
-		var zero NodeValue[K, V]
-		return zero, errors.New("your queue is empty")
+		return Node{}, errors.New("your queue is empty")
 	}
 
 	p.length--
@@ -67,25 +85,36 @@ func (p *PrioretyQueue[K, V]) ExtractMinimum() (NodeValue[K, V], error) {
 	return extracted, nil
 }
 
-func (p *PrioretyQueue[K, V]) heapify() {
-	for node, i := 0, 1; i < p.length || node < p.length; i++ {
-		leftIndex := 2 * i
-		rightIndex := (2 * i) - 1
+func (p *PrioretyQueue) heapify() {
+	for i := 0; i < p.length; i++ {
+		leftIndex := 2*i + 1
+		rightIndex := 2*i + 2
+		smallest := i
 
-		if p.heap[node].value <= p.heap[leftIndex].value &&
-			p.heap[node].value <= p.heap[rightIndex].value {
+		if leftIndex < p.length && p.heap[leftIndex].Freq < p.heap[smallest].Freq {
+			smallest = leftIndex
+		}
+		if rightIndex < p.length && p.heap[rightIndex].Freq < p.heap[smallest].Freq {
+			smallest = rightIndex
+		}
+
+		if smallest == i {
 			break
 		}
 
-		var indexOfMinElem int
-
-		if p.heap[leftIndex].value < p.heap[rightIndex].value {
-			indexOfMinElem = leftIndex
-		} else {
-			indexOfMinElem = rightIndex
-		}
-
-		p.heap[node], p.heap[indexOfMinElem] = p.heap[indexOfMinElem], p.heap[node]
-		node = indexOfMinElem
+		p.heap[i], p.heap[smallest] = p.heap[smallest], p.heap[i]
+		i = smallest
 	}
+}
+
+func (p *PrioretyQueue) SeeMinimum() (Node, error) {
+	if p.length <= 0 {
+		return Node{}, errors.New("your queue is empty")
+	}
+
+	return p.heap[0], nil
+}
+
+func (p *PrioretyQueue) Length() int {
+	return p.length
 }

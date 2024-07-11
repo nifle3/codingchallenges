@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nifle3/compressinTool/pkg/dataStruct"
 	"github.com/nifle3/compressinTool/pkg/output"
 
 	"github.com/spf13/cobra"
@@ -59,10 +60,40 @@ var compressionCmd = &cobra.Command{
 			}
 		}
 
+		queue := dataStruct.New(len(numberOfChar))
+
 		for key, value := range numberOfChar {
+			node := dataStruct.Node{}
+			node.Elem = rune(key)
+			node.Freq = value
+
+			queue.Insert(node)
+
 			fmt.Printf("%s : %d\n", string(key), value)
 		}
 
+		var lastNode dataStruct.Node
+		for queue.Length() > 0 {
+			node1, err := queue.ExtractMinimum()
+			if err != nil {
+				break
+			}
+
+			node2, err := queue.ExtractMinimum()
+			if err != nil {
+				lastNode = node1
+				break
+			}
+
+			node := dataStruct.Node{}
+			node.Left = &node1
+			node.Right = &node2
+			node.Freq = node1.Freq + node2.Freq
+
+			queue.Insert(node)
+		}
+
+		lastNode.PrintTree()
 	},
 }
 
